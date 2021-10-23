@@ -179,24 +179,28 @@ class qCircuit:
 class petSchool:
     pass
 
-class gridWorld:
-    def __init__(self, s, cat, mouse):
+#####################################################################################################
+#new part
+class GridWorld:
+    def __init__(self, s, catP, mouseP):
         self.numRows = s[0]
         self.numColumns = s[1]
-        self.cat = cat
-        self.mouse = mouse
+        self.catP = catP
+        self.mouseP = mouseP
+        # self.dogP = dogP
+        assert(not self.compiareList(self.catP, slef.mouseP))
     
     def getItem(self, p):
         if p[0]>=self.numRows or p[0]<0:
             return None
         if p[1]>=self.numColumns or p[1]<0:
             return None
-        if self.compaireList(p, cat):
+        if self.compaireList(p, catP):
             return CAT
-        elif self.compaireList(p, mouse):
+        elif self.compaireList(p, mouseP):
             return MOUSE
-        elif self.compaireList(p, DOG):
-            return DOG
+        # elif self.compaireList(p, DOG):
+        #     return DOG
         else:
             return EMPTY
 
@@ -217,20 +221,26 @@ class gridWorld:
     
     def getCat(self):
         return self.cat
+
     def setCat(self, p):
         self.cat = p
 
-def initState(self, gw:gridWorld):
+def initState(self, gw:GridWorld):
     # init cat position
     catP = [random.randint(0, gw.getNumRows()), random.randint(0, gw.getNumColumns())]
     while gw.getItem(catP) != EMPTY or gw.getItem(catP) != CAT:
         catP = [random.randint(0, len(gw)), random.randint(0, len(gw[0]))]
     ngw = deepcopy(gw)
     ngw.setCat(catP)
-    return catP, ngw
+    return State(catP), ngw
 
+gridSize = [3, 3]
+catP = [gridSize[0]-1, gridSize[0]-1]
+mouseP = [0, 0]
 
+gridWorld = GridWorld(catP=catP, mouseP=mouseP)
 
+####################################################################################################
 # super parameters
 N_STATES = 4
 N_EPISODES = 20
@@ -243,8 +253,11 @@ alphas = np.linspace(1.0, MIN_ALPHA, N_EPISODES)
 gamma = 1.0
 eps = 0.2
 
+
+
 for e in range(N_EPISODES): #  episode: a rund for agent
-    state = initState
+    state, gw = initState(gridWorld)
+    gridWorld = gw
     # for position in grid:
     #    qTable[position]=np.random(len(ACTIONS))
     qTable = initqTable
