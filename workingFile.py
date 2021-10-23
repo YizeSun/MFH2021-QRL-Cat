@@ -175,10 +175,6 @@ class cat:
 class qCircuit:
     pass
 
-# experiment: petSchool
-class petSchool:
-    pass
-
 #####################################################################################################
 #new part
 class GridWorld:
@@ -224,8 +220,16 @@ class GridWorld:
 
     def setCat(self, p):
         self.cat = p
+    
+    def initCatState(self, gw:GridWorld):
+        # init cat position
+        catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
+        while self.getItem(catP) != EMPTY or self.getItem(catP) != CAT:
+            catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
+        self.setCat(catP)
+        return State(catP)
 
-def initState(self, gw:GridWorld):
+def initCatState(self, gw:GridWorld):
     # init cat position
     catP = [random.randint(0, gw.getNumRows()), random.randint(0, gw.getNumColumns())]
     while gw.getItem(catP) != EMPTY or gw.getItem(catP) != CAT:
@@ -233,6 +237,9 @@ def initState(self, gw:GridWorld):
     ngw = deepcopy(gw)
     ngw.setCat(catP)
     return State(catP), ngw
+
+class petSchool:
+    pass
 
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
@@ -254,10 +261,8 @@ gamma = 1.0
 eps = 0.2
 
 
-
 for e in range(N_EPISODES): #  episode: a rund for agent
-    state, gw = initState(gridWorld)
-    gridWorld = gw
+    state = gridWorld.initCatState(gridWorld)
     # for position in grid:
     #    qTable[position]=np.random(len(ACTIONS))
     qTable = initqTable
