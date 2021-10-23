@@ -243,7 +243,7 @@ class PetSchool:
         self.NUM_EPISODES = numEpisodes
         self.MAX_EPISODE_STEPS = maxEpisodeSteps
         self.qTable = {}
-        self.alphas = np.linspace(1.0, MIN_ALPHA, self.NUM_EPISODES)
+        self.alphas = np.linspace(1.0, minAlpha, self.NUM_EPISODES)
         self.gamma = 1.0
         self.eps = 0.2
         self.ACTIONS = [UP, DOWN, LEFT, RIGHT]
@@ -282,15 +282,6 @@ gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
 
-# initQTable
-def initqTable(self, ACTIONS):
-        side = 2 # Number of cells per side of the grid
-        d = {}
-        for i in range(side):
-            for j in range(side):
-                d[(i,j)] = np.random.random()
-
-        return d
 # initGridWorld
 gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
 cat = Cat()
