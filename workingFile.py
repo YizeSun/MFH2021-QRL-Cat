@@ -209,4 +209,6 @@ def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time th
             newPos = (oldPos[0],max(0, oldPos[1]-1))
         else:
             newPos = (oldPos[0],min(side - 1, oldPos[1]+1))
+    else:
+        newPos = oldPos
     return newPos
