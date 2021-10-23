@@ -108,11 +108,11 @@ class GridWorld:
 
 # agent: cat
 class Cat:
-    def __init__(self, qTable, gridWorld:GridWorld, training=True, eps = 0.2):
+    def __init__(self, gridWorld:GridWorld, qNet: QNet, training=True, eps = 0.2):
         self.eps = eps
-        self.qt = qTable
         self.gw = gridWorld
         self.training = training
+        self.qNet = qNet
 
         # result: ret = optimizer.optimize() 
         # self.rets = {(0,0):ret, (0,1):ret2,...}
@@ -163,10 +163,9 @@ class Cat:
     def setTraining(self, training):
         self.Training = training
 
-# quantum circuit: state->action
-class qNetwork:# just a place for 
+class QNet:
     
-    def __init__(self, qTable, gridWorld:GridWorld, params):
+    def __init__(self, qTable, gridWorld:GridWorld, params, alpha, gamma):
         
         self.params = params # inital parameters are the same for all qNetwork
         self.gw = gridWorld
@@ -174,15 +173,15 @@ class qNetwork:# just a place for
         self.backend = Aer.get_backend("qasm_simulator")
         self.NUM_SHOTS = 1000 # number of measurements 
         self.optimizer = COBYLA(maxiter=500, tol=0.0001) # off the shelf
+        self.gamma = gamma
+        self.alpha = alpha
         
         self.qcs = None # all qubits
         self.rets = None # resulting parameters after optimization for all points in the grid
         
-        
         self.qc = None #current state
         self.state = None
         
-    
         qcs = {}
         def qcMaker(params):
             qr = QuantumRegister(2, name="q")
@@ -200,7 +199,6 @@ class qNetwork:# just a place for
                 qcs[i, j] = qc 
     
         self.qcs = self.initQC(params)
-    
     
     def selectAction(self, state, training):
         if random.uniform(0, 1) < self.eps:
@@ -223,12 +221,11 @@ class qNetwork:# just a place for
         nextPosition = self.newPosition(state, action) # handle the 
         reward, _ = self.getReward(nextPosition)
         # update q-table(but not very sure, update only for this action or for all actions)
-        targetQvalue = reward + gamma *  np.max(self.qt[State(nextPosition)])
+        targetQvalue = reward + self.gamma *  np.max(self.qt[State(nextPosition)])
         if targetQvalue - self.qt[state][action] > 0:
-            self.qt[state][action] += alpha * (targetQvalue - self.qt[state][action]) # update q-table
+            self.qt[state][action] += self.alpha * (targetQvalue - self.qt[state][action]) # update q-table
         return targetQvalue - self.qt[state][action]
 
-    
     def updateCircuit(self, state):
         self.rets[state] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.params)
 
@@ -238,7 +235,7 @@ class qNetwork:# just a place for
                     
 
 class PetSchool:
-    def __init__(self, gw:GridWorld, cat:Cat, numEpisodes, maxEpisodeSteps, training=True, minAlpha = 0.02, eps = 0.2, gamma = 1.0):
+    def __init__(self, gw:GridWorld, cat:Cat, qNetwork:QNetwork, numEpisodes, maxEpisodeSteps, training=True, minAlpha = 0.02, eps = 0.2, gamma = 1.0):
         self.gw = gw
         self.cat = cat
         self.training = training
@@ -250,21 +247,23 @@ class PetSchool:
         self.eps = eps
         self.ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
-    def start(self):
+    def train(self):
+        counter = 0
         for e in range(self.NUM_EPISODES): #  episode: a rund for agent
-            state = self.gridWorld.initCatState()
-            self.qTable = initqTable(self.ACTIONS)
+            state = self.gw.initCatState()
             total_reward  = 0
-            alpha = alphas[e]
-            counter = 0
+            alpha = self.alphas[e]
             step = 0
             end = False
             while(step < self.MAX_EPISODE_STEPS and not end): # step: a time step for agent
-                action = self.cat.selectAction(state)
+                action = self.cat.qNet.selectAction(state, self.training)
                 newPosition, reward, end = cat.act(state, action)
                 total_reward += reward
                 if self.training:
-                    updateNetwork(alpha, self.gamma, self.eps)
+                    self.cat.qNet.updateNetwork(alpha, self.gamma, self.eps)
+                step += 1
+                counter += 1
+        print("step: ", step, "counter: ", counter)
 
     def show(self):
         self.cat.setTraining(False)
@@ -297,6 +296,8 @@ class PetSchool:
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
+EPS = 10
+MAX_EPS_STEP = 10
 
 # initGridWorld
 gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
@@ -309,7 +310,9 @@ def initqTable(ACTIONS, size):
     return d
 
 qt = initqTable(ACTIONS, gridSize)
-cat = Cat(qt, gridWorld, training= True)
+cat = Cat(gridWorld)
+petSchool = PetSchool(gridWorld, cat, EPS, MAX_EPS_STEP)
+petSchool.train()
 
 ####################################################################################################
 
