@@ -182,7 +182,7 @@ class GridWorld:
         self.catP = catP
         self.mouseP = mouseP
         # self.dogP = dogP
-        assert(not self.compiareList(self.catP, slef.mouseP))
+        assert(not self.compaireList(self.catP, self.mouseP))
     
     def getItem(self, p):
         if p[0]>=self.numRows or p[0]<0:
@@ -219,21 +219,15 @@ class GridWorld:
     def setCat(self, p):
         self.cat = p
     
-    def initCatState(self, gw:GridWorld):
+    def initCatState(self):
         # init cat position
         catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
-        while self.getItem(catP) != EMPTY or self.getItem(catP) != CAT:
+        while self.getItem(catP) != EMPTY and self.getItem(catP) != CAT:
             catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
         self.setCat(catP)
         return State(catP)
 
-
-UP = "00"
-DOWN = "01"
-LEFT = "10"
-RIGHT = "11"
-
-class petSchool:
+class PetSchool:
     def __init__(self, gw:GridWorld, cat:Cat, training, numEpisodes, maxEpisodeSteps, minAlpha = 0.02):
         self.gw = gw
         self.cat = cat
@@ -248,7 +242,7 @@ class petSchool:
 
     def start(self):
         for e in range(N_EPISODES): #  episode: a rund for agent
-            state = gridWorld.initCatState(gridWorld)
+            state = self.gridWorld.initCatState()
             self.qTable = initqTable(self.ACTIONS)
             total_reward  = 0
             alpha = alphas[e]
@@ -295,12 +289,10 @@ gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
 
-gridWorld = GridWorld(catP=catP, mouseP=mouseP)
+gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
+petSchool = petSchool
 
 ####################################################################################################
-# super parameters
-gamma = 1.0
-eps = 0.2
 
 
 
