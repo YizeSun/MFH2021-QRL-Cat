@@ -182,7 +182,7 @@ class GridWorld:
         self.catP = catP
         self.mouseP = mouseP
         # self.dogP = dogP
-        assert(not self.compiareList(self.catP, slef.mouseP))
+        assert(not self.compaireList(self.catP, self.mouseP))
     
     def getItem(self, p):
         if p[0]>=self.numRows or p[0]<0:
