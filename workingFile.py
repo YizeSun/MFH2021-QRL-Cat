@@ -32,8 +32,6 @@ def showGridWorld():
 
 showGridWorld()
 
-qtable={(0,0):[0.46,2,3,4], }
-
 class State:
     def __init__(self, catP):
         self.row = catP[0]
@@ -230,39 +228,53 @@ class GridWorld:
         return State(catP)
 
 
-N_STATES = 4
-N_EPISODES = 20
+UP = "00"
+DOWN = "01"
+LEFT = "10"
+RIGHT = "11"
 
-MAX_EPISODE_STEPS = 100
-
-MIN_ALPHA = 0.02
 class petSchool:
-    def __init__(self, gw:GridWorld, cat:Cat, numEpisodes, maxEpisodeSteps):
+    def __init__(self, gw:GridWorld, cat:Cat, training, numEpisodes, maxEpisodeSteps, minAlpha = 0.02):
         self.gw = gw
         self.cat = cat
+        self.training = training
         self.NUM_EPISODES = numEpisodes
         self.MAX_EPISODE_STEPS = maxEpisodeSteps
+        self.qTable = {}
+        self.alphas = np.linspace(1.0, MIN_ALPHA, self.NUM_EPISODES)
+        self.gamma = 1.0
+        self.eps = 0.2
+        self.ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
-    def train(self, num):
+    def start(self):
+        for e in range(N_EPISODES): #  episode: a rund for agent
+            state = gridWorld.initCatState(gridWorld)
+            self.qTable = initqTable(self.ACTIONS)
+            total_reward  = 0
+            alpha = alphas[e]
+            counter = 0
+            step = 0
+            end = False
+            while(step < self.MAX_EPISODE_STEPS and not end): # step: a time step for agent
+                action = cat.selectAction(state)
+                newPosition, reward, end = cat.act(state, action)
+                total_reward += reward
+                if self.training:
+                    updateNetwork(alpha, self.gamma, self.eps)
+    def show(self):
+        self.cat.setTraining(False)
+        showResult(self.cat.qt)
+        pass # TODO
 
-    for e in range(N_EPISODES): #  episode: a rund for agent
-    state = gridWorld.initCatState(gridWorld)
-    # for position in grid:
-    #    qTable[position]=np.random(len(ACTIONS))
-    qTable = initqTable
-    total_reward  = 0
-    alpha = alphas[e]
-    counter = 0
-    step = 0
-    end = False
-    while(step < MAX_EPISODE_STEPS and not end): # step: a time step for agent
-        action = cat.selectAction(state)
-        newPosition, reward, end = cat.act(state, action)
-        total_reward += reward
-        updateNetwork()
+    def initqTable(self, ACTIONS):
+        side = 2 # Number of cells per side of the grid
+        d = {}
+        for i in range(side):
+            for j in range(side):
+                d[(i,j)] = np.random.random()
 
-agent.setTraining(False)
-showResult(agent.qt)
+        return d
+
 
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
@@ -272,45 +284,9 @@ gridWorld = GridWorld(catP=catP, mouseP=mouseP)
 
 ####################################################################################################
 # super parameters
-N_STATES = 4
-N_EPISODES = 20
-
-MAX_EPISODE_STEPS = 100
-
-MIN_ALPHA = 0.02
-
-alphas = np.linspace(1.0, MIN_ALPHA, N_EPISODES)
 gamma = 1.0
 eps = 0.2
 
-
-for e in range(N_EPISODES): #  episode: a rund for agent
-    state = gridWorld.initCatState(gridWorld)
-    # for position in grid:
-    #    qTable[position]=np.random(len(ACTIONS))
-    qTable = initqTable(len(ACTIONS))
-    total_reward  = 0
-    alpha = alphas[e]
-    counter = 0
-    step = 0
-    end = False
-    while(step < MAX_EPISODE_STEPS and not end): # step: a time step for agent
-        action = cat.selectAction(state)
-        newPosition, reward, end = cat.act(state, action)
-        total_reward += reward
-        updateNetwork()
-
-agent.setTraining(False)
-showResult(agent.qt)
-
-def initqTable(ACTIONS):
-    side = 2 # Number of cells per side of the grid
-    d = {}
-    for i in range(side):
-        for j in range(side):
-            d[(i,j)] = np.random.random()
-
-    return d
 
 def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
     side = 2 # Number of cells per side of the grid
