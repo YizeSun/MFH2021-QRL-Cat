@@ -222,18 +222,12 @@ class GridWorld:
     def initCatState(self):
         # init cat position
         catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
-        while self.getItem(catP) != EMPTY or self.getItem(catP) != CAT:
+        while self.getItem(catP) != EMPTY and self.getItem(catP) != CAT:
             catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
         self.setCat(catP)
         return State(catP)
 
-
-UP = "00"
-DOWN = "01"
-LEFT = "10"
-RIGHT = "11"
-
-class petSchool:
+class PetSchool:
     def __init__(self, gw:GridWorld, cat:Cat, training, numEpisodes, maxEpisodeSteps, minAlpha = 0.02):
         self.gw = gw
         self.cat = cat
@@ -281,11 +275,9 @@ catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
 
 gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
+petSchool = petSchool
 
 ####################################################################################################
-# super parameters
-gamma = 1.0
-eps = 0.2
 
 
 def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
