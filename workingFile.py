@@ -174,7 +174,7 @@ eps = 0.2
 
 for e in range(N_EPISODES): #  episode: a rund for agent
     state = initState
-    qTable = initqTable
+    qTable = initqTable(len(ACTIONS))
     total_reward  = 0
     alpha = alphas[e]
     counter = 0
@@ -187,3 +187,13 @@ for e in range(N_EPISODES): #  episode: a rund for agent
 
 agent.setTraining(False)
 showResult(agent.qt)
+
+def initqTable(ACTIONS):
+    side = 2 # Number of cells per side of the grid
+    d = {}
+    for i in range(side):
+        for j in range(side):
+            d[(i,j)] = np.random.random()
+
+    return d
+    
