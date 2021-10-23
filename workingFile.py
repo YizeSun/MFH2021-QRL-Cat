@@ -13,14 +13,16 @@ MOUSE = "m"
 EMPTY = "emp"
 
 gridWorld = [[MOUSE, EMPTY, DOG],
-        [MOUSE, EMPTY, EMPTY],
-         [DOG, EMPTY, CAT]]
+            [EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, CAT]]
 
 # actions:
 UP = "00"
 DOWN = "01"
 LEFT = "10"
 RIGHT = "11"
+
+# helleo i change the main
 
 ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
@@ -29,6 +31,8 @@ def showGridWorld():
         print(" ".join(row))
 
 showGridWorld()
+
+qtable={(0,0):[0.46,2,3,4], }
 
 class State:
     def __init__(self, catP):
@@ -49,15 +53,26 @@ class State:
 class cat:
     def __init__(self, eps, qTable, gridWorld, training):
         self.eps = eps
+        self.qCircuit = 
+        # this is a dict
         self.qt = qTable
         self.gw = gridWorld
         self.params = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        # quantum circuit
         self.backend = Aer.get_backend("qasm_simulator")
-        self.NUM_SHOTS = 1000
+        self.NUM_SHOTS = 1000 # (get_counts = [500, 500])
+
+        # optimizer
         self.optimizer = COBYLA(maxiter=500, tol=0.0001)
         self.training = training
-        self.rets = None
+
+        # result: ret = optimizer.optimize() 
+        self.rets = {(0,0):ret, (0,1):ret2,...}
+        
+        # we have 9 circuits here in qcs TODO: maybe a random, need try, need solve!!!
         self.qcs = self.initQC(ret[0])
+
+        # for updating our qTable
         self.qc = None
         self.state = None
     
@@ -69,7 +84,9 @@ class cat:
             qc = QuantumCircuit(qr, cr)
             qc.u3(params[0], params[1], params[2], qr[0])
             qc.u3(params[3], params[4], params[5], qr[1])
-            qc.cx(qr[0], qr[1])
+            # qc.cx(qr[0], qr[1]) cnot gate
+            # qc.u3(params[6], params[7], params[8], qr[0])
+            # qc.u3(params[9], params[10], params[11], qr[1])
             qc.measure(qr, cr)
             return qc
 
@@ -80,10 +97,11 @@ class cat:
         return qcs
 
     def selectAction(self, state):
-        if random.uniform(0, 1) < self.eps:
+        if random.uniform(0, 1) < self.eps: # exploration
             return random.choice(ACTIONS)
-        else:
+        else: # greedy 
             if self.training:
+                # [0,0]
                 self.qc = self.qcs[state.row, state.column]
                 self.state = state
                 self.updateCircuit(state)
@@ -136,7 +154,7 @@ class cat:
             self.gw[old[0]][old[1]] = EMPTY
             self.gw[p[0]][p[1]] = CAT
         elif grid == CAT:
-            reward = -1
+            reward = -2 # (maybe less than reward of empty)
             end = False
         else:
             raise ValueError(f"Unknown grid item {grid}")
@@ -154,7 +172,7 @@ class cat:
         self.Training = training
 
 # quantum circuit: state->action
-class qNetwork:
+class qCircuit:
     pass
 
 # experiment: petSchool
@@ -174,16 +192,20 @@ eps = 0.2
 
 for e in range(N_EPISODES): #  episode: a rund for agent
     state = initState
+    # for position in grid:
+    #    qTable[position]=np.random(len(ACTIONS))
     qTable = initqTable
     total_reward  = 0
     alpha = alphas[e]
     counter = 0
     step = 0
-    while(step < MAX_EPISODE_STEPS): # step: a time step for agent
-        action = selectAction(state)
-        newPosition, reward, end = act(state, action)
+    end = False
+    while(step < MAX_EPISODE_STEPS and not end): # step: a time step for agent
+        action = cat.selectAction(state)
+        newPosition, reward, end = cat.act(state, action)
         total_reward += reward
         updateNetwork()
 
 agent.setTraining(False)
 showResult(agent.qt)
+
