@@ -108,77 +108,17 @@ class GridWorld:
 
 # agent: cat
 class Cat:
-    def __init__(self, eps, qTable, gridWorld:GridWorld, training):
+    def __init__(self, qTable, gridWorld:GridWorld, training=True, eps = 0.2):
         self.eps = eps
-        #self.qCircuit = 
-        # this is a dict
         self.qt = qTable
         self.gw = gridWorld
-        self.params = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-        # quantum circuit
-        self.backend = Aer.get_backend("qasm_simulator")
-        self.NUM_SHOTS = 1000 # (get_counts = [500, 500])
-
-        # optimizer
-        self.optimizer = COBYLA(maxiter=500, tol=0.0001)
         self.training = training
 
         # result: ret = optimizer.optimize() 
         # self.rets = {(0,0):ret, (0,1):ret2,...}
         
         # we have 9 circuits here in qcs TODO: maybe a random, need try, need solve!!!
-        self.qcs = self.initQC(ret[0])
-
-        # for updating our qTable
-        self.qc = None
         self.state = None
-    
-    def initQC(self, params):
-        qcs = {}
-        def qcMaker(params):
-            qr = QuantumRegister(2, name="q")
-            cr = ClassicalRegister(2, name="c")
-            qc = QuantumCircuit(qr, cr)
-            qc.u3(params[0], params[1], params[2], qr[0])
-            qc.u3(params[3], params[4], params[5], qr[1])
-            # qc.cx(qr[0], qr[1]) cnot gate
-            # qc.u3(params[6], params[7], params[8], qr[0])
-            # qc.u3(params[9], params[10], params[11], qr[1])
-            qc.measure(qr, cr)
-            return qc
-
-        for i in range(self.gw.getNumRows()):
-            for j in range(self.gw.getNumColumns()):
-                qc = qcMaker(params)
-                qcs[i, j] = qc
-        return qcs
-
-    def selectAction(self, state):
-        if random.uniform(0, 1) < self.eps: # exploration
-            return random.choice(ACTIONS)
-        else: # greedy 
-            if self.training:
-                # [0,0]
-                self.qc = self.qcs[state.row, state.column]
-                self.state = state
-                self.updateCircuit(state)
-            return np.argmax(self.qt[state])
-
-    def lossFunction(self, params):
-        state = self.state
-        qc = self.qc
-        t_qc = transpile(qc, self.backend)
-        job = assemble(t_qc, shots=self.NUM_SHOTS)
-        rlt = self.backend.run(job).result()
-        counts = rlt.get_counts(qc)
-        action = max(counts, key = counts.get)
-        nextPosition = self.newPosition(state, action) # handle the 
-        reward, _ = self.getReward(nextPosition)
-        # update q-table(but not very sure, update only for this action or for all actions)
-        targetQvalue = reward + gamma *  np.max(self.qt[State(nextPosition)])
-        if targetQvalue - self.qt[state][action] > 0:
-            self.qt[state][action] += alpha * (targetQvalue - self.qt[state][action]) # update q-table
-        return targetQvalue - self.qt[state][action]
 
     def newPosition(self, state, action):
             p = deepcopy(state.catP)
@@ -219,23 +159,86 @@ class Cat:
         p = self.newPosition(state, action)
         reward, end = self.getReward(p)
         return deepcopy[p], reward, end
-        
-    def updateCircuit(self, state):
-        self.rets[state] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.params)
     
     def setTraining(self, training):
         self.Training = training
 
 # quantum circuit: state->action
-class QCircuit:
-    pass
+class qNetwork:# just a place for 
+    
+    def __init__(self, qTable, gridWorld:GridWorld, params):
+        
+        self.params = params # inital parameters are the same for all qNetwork
+        self.gw = gridWorld
+        self.qt = qTable
+        self.backend = Aer.get_backend("qasm_simulator")
+        self.NUM_SHOTS = 1000 # number of measurements 
+        self.optimizer = COBYLA(maxiter=500, tol=0.0001) # off the shelf
+        
+        self.qcs = None # all qubits
+        self.rets = None # resulting parameters after optimization for all points in the grid
+        
+        
+        self.qc = None #current state
+        self.state = None
+        
+    
+        qcs = {}
+        def qcMaker(params):
+            qr = QuantumRegister(2, name="q")
+            cr = ClassicalRegister(2, name="c")
+            qc = QuantumCircuit(qr, cr)
+            qc.u3(params[0], params[1], params[2], qr[0])
+            qc.u3(params[3], params[4], params[5], qr[1])
+            qc.cx(qr[0], qr[1])
+            qc.measure(qr, cr)
+            return qc
+
+        for i in range(self.gw.getNumRows()):
+            for j in range(self.gw.getNumColumns):
+                qc = qcMaker(params)
+                qcs[i, j] = qc 
+    
+        self.qcs = self.initQC(params)
+    
+    
+    def selectAction(self, state, training):
+        if random.uniform(0, 1) < self.eps:
+            return random.choice(ACTIONS)
+        else:
+            if training:
+                qc = self.qcs[state.row, state.column]
+                self.state = state
+                self.updateCircuit(state)
+            return np.argmax(self.qt[state])
+        
+    def lossFunction(self, params):
+        state = self.state
+        qc = self.qc
+        t_qc = transpile(qc, self.backend)
+        job = assemble(t_qc, shots=self.NUM_SHOTS)
+        rlt = self.backend.run(job).result()
+        counts = rlt.get_counts(qc)
+        action = max(counts, key = counts.get)
+        nextPosition = self.newPosition(state, action) # handle the 
+        reward, _ = self.getReward(nextPosition)
+        # update q-table(but not very sure, update only for this action or for all actions)
+        targetQvalue = reward + gamma *  np.max(self.qt[State(nextPosition)])
+        if targetQvalue - self.qt[state][action] > 0:
+            self.qt[state][action] += alpha * (targetQvalue - self.qt[state][action]) # update q-table
+        return targetQvalue - self.qt[state][action]
+
+    
+    def updateCircuit(self, state):
+        self.rets[state] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.params)
+
 
 #####################################################################################################
 #new part
                     
 
 class PetSchool:
-    def __init__(self, gw:GridWorld, cat:Cat, training, numEpisodes, maxEpisodeSteps, minAlpha = 0.02):
+    def __init__(self, gw:GridWorld, cat:Cat, numEpisodes, maxEpisodeSteps, training=True, minAlpha = 0.02, eps = 0.2, gamma = 1.0):
         self.gw = gw
         self.cat = cat
         self.training = training
@@ -243,12 +246,12 @@ class PetSchool:
         self.MAX_EPISODE_STEPS = maxEpisodeSteps
         self.qTable = {}
         self.alphas = np.linspace(1.0, minAlpha, self.NUM_EPISODES)
-        self.gamma = 1.0
-        self.eps = 0.2
+        self.gamma = gamma
+        self.eps = eps
         self.ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
     def start(self):
-        for e in range(N_EPISODES): #  episode: a rund for agent
+        for e in range(self.NUM_EPISODES): #  episode: a rund for agent
             state = self.gridWorld.initCatState()
             self.qTable = initqTable(self.ACTIONS)
             total_reward  = 0
@@ -257,23 +260,22 @@ class PetSchool:
             step = 0
             end = False
             while(step < self.MAX_EPISODE_STEPS and not end): # step: a time step for agent
-                action = cat.selectAction(state)
+                action = self.cat.selectAction(state)
                 newPosition, reward, end = cat.act(state, action)
                 total_reward += reward
                 if self.training:
                     updateNetwork(alpha, self.gamma, self.eps)
+
     def show(self):
         self.cat.setTraining(False)
         showResult(self.cat.qt)
         pass # TODO
 
-    def initqTable(self, ACTIONS):
-        side = 2 # Number of cells per side of the grid
+    def initqTable(self, ACTIONS, size):
         d = {}
-        for i in range(side):
-            for j in range(side):
-                d[(i,j)] = np.random.random()
-
+        for i in range(size[0]):
+            for j in range(size[1]):
+                d[i,j] = np.zeros(len(ACTIONS))
         return d
         
     def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
@@ -299,8 +301,15 @@ mouseP = [0, 0]
 # initGridWorld
 gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
 
+def initqTable(ACTIONS, size):
+    d = {}
+    for i in range(size[0]):
+        for j in range(size[1]):
+            d[i,j] = np.zeros(len(ACTIONS))
+    return d
 
-
+qt = initqTable(ACTIONS, gridSize)
+cat = Cat(qt, gridWorld, training= True)
 
 ####################################################################################################
 
