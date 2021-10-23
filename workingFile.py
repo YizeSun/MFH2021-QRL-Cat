@@ -288,7 +288,7 @@ for e in range(N_EPISODES): #  episode: a rund for agent
     state = gridWorld.initCatState(gridWorld)
     # for position in grid:
     #    qTable[position]=np.random(len(ACTIONS))
-    qTable = initqTable
+    qTable = initqTable(len(ACTIONS))
     total_reward  = 0
     alpha = alphas[e]
     counter = 0
@@ -303,3 +303,25 @@ for e in range(N_EPISODES): #  episode: a rund for agent
 agent.setTraining(False)
 showResult(agent.qt)
 
+def initqTable(ACTIONS):
+    side = 2 # Number of cells per side of the grid
+    d = {}
+    for i in range(side):
+        for j in range(side):
+            d[(i,j)] = np.random.random()
+
+    return d
+
+def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
+    side = 2 # Number of cells per side of the grid
+    if np.random.random() < p:
+        n = np.random.random()
+        if n < 0.25:
+            newPos = (max(0, oldPos[0]-1),oldPos[1])
+        elif n < 0.5:
+            newPos = (min(side - 1, oldPos[0]+1),oldPos[1])
+        elif n < 0.75:
+            newPos = (oldPos[0],max(0, oldPos[1]-1))
+        else:
+            newPos = (oldPos[0],min(side - 1, oldPos[1]+1))
+    return newPos
