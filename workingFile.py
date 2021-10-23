@@ -50,7 +50,7 @@ class State:
         return f"State(cat_pos={self.catP})"
 
 # agent: cat
-class cat:
+class Cat:
     def __init__(self, eps, qTable, gridWorld, training):
         self.eps = eps
         self.qCircuit = 
@@ -172,7 +172,7 @@ class cat:
         self.Training = training
 
 # quantum circuit: state->action
-class qCircuit:
+class QCircuit:
     pass
 
 #####################################################################################################
@@ -229,17 +229,40 @@ class GridWorld:
         self.setCat(catP)
         return State(catP)
 
-def initCatState(self, gw:GridWorld):
-    # init cat position
-    catP = [random.randint(0, gw.getNumRows()), random.randint(0, gw.getNumColumns())]
-    while gw.getItem(catP) != EMPTY or gw.getItem(catP) != CAT:
-        catP = [random.randint(0, len(gw)), random.randint(0, len(gw[0]))]
-    ngw = deepcopy(gw)
-    ngw.setCat(catP)
-    return State(catP), ngw
 
+N_STATES = 4
+N_EPISODES = 20
+
+MAX_EPISODE_STEPS = 100
+
+MIN_ALPHA = 0.02
 class petSchool:
-    pass
+    def __init__(self, gw:GridWorld, cat:Cat, numEpisodes, maxEpisodeSteps):
+        self.gw = gw
+        self.cat = cat
+        self.NUM_EPISODES = numEpisodes
+        self.MAX_EPISODE_STEPS = maxEpisodeSteps
+
+    def train(self, num):
+
+    for e in range(N_EPISODES): #  episode: a rund for agent
+    state = gridWorld.initCatState(gridWorld)
+    # for position in grid:
+    #    qTable[position]=np.random(len(ACTIONS))
+    qTable = initqTable
+    total_reward  = 0
+    alpha = alphas[e]
+    counter = 0
+    step = 0
+    end = False
+    while(step < MAX_EPISODE_STEPS and not end): # step: a time step for agent
+        action = cat.selectAction(state)
+        newPosition, reward, end = cat.act(state, action)
+        total_reward += reward
+        updateNetwork()
+
+agent.setTraining(False)
+showResult(agent.qt)
 
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
