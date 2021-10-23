@@ -274,7 +274,22 @@ class petSchool:
                 d[(i,j)] = np.random.random()
 
         return d
-
+        
+    def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
+        side = 2 # Number of cells per side of the grid
+        if np.random.random() < p:
+            n = np.random.random()
+            if n < 0.25:
+                newPos = (max(0, oldPos[0]-1),oldPos[1])
+            elif n < 0.5:
+                newPos = (min(side - 1, oldPos[0]+1),oldPos[1])
+            elif n < 0.75:
+                newPos = (oldPos[0],max(0, oldPos[1]-1))
+            else:
+                newPos = (oldPos[0],min(side - 1, oldPos[1]+1))
+        else:
+            newPos = oldPos
+        return newPos
 
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
@@ -288,18 +303,4 @@ gamma = 1.0
 eps = 0.2
 
 
-def mouseMove(p,oldPos): # goal (mouse) moves randomly with prob p every time the cat moves
-    side = 2 # Number of cells per side of the grid
-    if np.random.random() < p:
-        n = np.random.random()
-        if n < 0.25:
-            newPos = (max(0, oldPos[0]-1),oldPos[1])
-        elif n < 0.5:
-            newPos = (min(side - 1, oldPos[0]+1),oldPos[1])
-        elif n < 0.75:
-            newPos = (oldPos[0],max(0, oldPos[1]-1))
-        else:
-            newPos = (oldPos[0],min(side - 1, oldPos[1]+1))
-    else:
-        newPos = oldPos
-    return newPos
+
