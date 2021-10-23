@@ -12,9 +12,9 @@ DOG = "d"
 MOUSE = "m"
 EMPTY = "emp"
 
-gridWorld = [[MOUSE, EMPTY, DOG],
-            [EMPTY, EMPTY, EMPTY],
-            [EMPTY, EMPTY, CAT]]
+# gridWorld = [[MOUSE, EMPTY, DOG],
+#            [EMPTY, EMPTY, EMPTY],
+#            [EMPTY, EMPTY, CAT]]
 
 # actions:
 UP = "00"
@@ -25,12 +25,6 @@ RIGHT = "11"
 # helleo i change the main
 
 ACTIONS = [UP, DOWN, LEFT, RIGHT]
-
-def showGridWorld():
-    for row in gridWorld:
-        print(" ".join(row))
-
-showGridWorld()
 
 class State:
     def __init__(self, catP):
@@ -51,7 +45,7 @@ class State:
 class Cat:
     def __init__(self, eps, qTable, gridWorld, training):
         self.eps = eps
-        self.qCircuit = 
+        #self.qCircuit = 
         # this is a dict
         self.qt = qTable
         self.gw = gridWorld
@@ -65,7 +59,7 @@ class Cat:
         self.training = training
 
         # result: ret = optimizer.optimize() 
-        self.rets = {(0,0):ret, (0,1):ret2,...}
+        # self.rets = {(0,0):ret, (0,1):ret2,...}
         
         # we have 9 circuits here in qcs TODO: maybe a random, need try, need solve!!!
         self.qcs = self.initQC(ret[0])
@@ -213,19 +207,33 @@ class GridWorld:
     def getMouse(self):
         return self.mouse
     
-    def getCat(self):
-        return self.cat
+    def getCatP(self):
+        return self.catP
 
-    def setCat(self, p):
-        self.cat = p
+    def setCatP(self, p):
+        self.catP = p
     
     def initCatState(self):
         # init cat position
         catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
         while self.getItem(catP) != EMPTY and self.getItem(catP) != CAT:
             catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
-        self.setCat(catP)
+        self.setCatP(catP)
         return State(catP)
+    
+    def show(self):
+        output = ""
+        for i in range(self.numRows):
+            for j in range(self.numColumns):
+                if self.compaireList([i,j], self.catP):
+                    output += CAT + " "
+                elif self.compaireList([i,j], self.mouseP):
+                    output += MOUSE + " "
+                else:
+                    output += EMPTY + " "
+            output += "\n"
+        print(output)
+                    
 
 class PetSchool:
     def __init__(self, gw:GridWorld, cat:Cat, training, numEpisodes, maxEpisodeSteps, minAlpha = 0.02):
@@ -289,8 +297,20 @@ gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
 
+# initQTable
+def initqTable(self, ACTIONS):
+        side = 2 # Number of cells per side of the grid
+        d = {}
+        for i in range(side):
+            for j in range(side):
+                d[(i,j)] = np.random.random()
+
+        return d
+# initGridWorld
 gridWorld = GridWorld(gridSize, catP=catP, mouseP=mouseP)
-petSchool = petSchool
+cat = Cat()
+
+
 
 ####################################################################################################
 
