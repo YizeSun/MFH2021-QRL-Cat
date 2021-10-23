@@ -178,6 +178,59 @@ class qCircuit:
 # experiment: petSchool
 class petSchool:
     pass
+
+class gridWorld:
+    def __init__(self, s, cat, mouse):
+        self.numRows = s[0]
+        self.numColumns = s[1]
+        self.cat = cat
+        self.mouse = mouse
+    
+    def getItem(self, p):
+        if p[0]>=self.numRows or p[0]<0:
+            return None
+        if p[1]>=self.numColumns or p[1]<0:
+            return None
+        if self.compaireList(p, cat):
+            return CAT
+        elif self.compaireList(p, mouse):
+            return MOUSE
+        elif self.compaireList(p, DOG):
+            return DOG
+        else:
+            return EMPTY
+
+    def compaireList(self, l1,l2):
+        for i, j in zip(l1, l2):
+            if i!=j:
+                return False
+        return True
+
+    def getNumRows(self):
+        return self.numRows
+
+    def getNumColumns(self):
+        return self.numColumns
+
+    def getMouse(self):
+        return self.mouse
+    
+    def getCat(self):
+        return self.cat
+    def setCat(self, p):
+        self.cat = p
+
+def initState(self, gw:gridWorld):
+    # init cat position
+    catP = [random.randint(0, gw.getNumRows()), random.randint(0, gw.getNumColumns())]
+    while gw.getItem(catP) != EMPTY or gw.getItem(catP) != CAT:
+        catP = [random.randint(0, len(gw)), random.randint(0, len(gw[0]))]
+    ngw = deepcopy(gw)
+    ngw.setCat(catP)
+    return catP, ngw
+
+
+
 # super parameters
 N_STATES = 4
 N_EPISODES = 20
