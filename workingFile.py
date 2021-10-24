@@ -123,30 +123,24 @@ class QNet:
         self.alpha = alpha
         self.ACTIONS = actions
 
-        self.qcs = dict() # all qubits
         self.rets = dict() # resulting parameters after optimization for all points in the grid
-        
-        self.qc = None #current state
+
         self.state = None
         
-        qcs = {}
-        def qcMaker(params):
-            qr = QuantumRegister(2, name="q")
-            cr = ClassicalRegister(2, name="c")
-            qc = QuantumCircuit(qr, cr)
-            qc.u3(params[0], params[1], params[2], qr[0])
-            qc.u3(params[3], params[4], params[5], qr[1])
-            # qc.cx(qr[0], qr[1])
-            qc.measure(qr, cr)
-            return qc
-
         for i in range(self.gw.getNumRows()):
             for j in range(self.gw.getNumColumns()):
-                qc = qcMaker(params)
-                qcs[i, j] = qc 
+                self.rets[i, j] = self.params 
     
-        self.qcs = qcs
-    
+    def qcMaker(self, params):
+        qr = QuantumRegister(2, name="q")
+        cr = ClassicalRegister(2, name="c")
+        qc = QuantumCircuit(qr, cr)
+        qc.u3(params[0], params[1], params[2], qr[0])
+        qc.u3(params[3], params[4], params[5], qr[1])
+        # qc.cx(qr[0], qr[1])
+        qc.measure(qr, cr)
+        return qc
+
     def newPosition(self, state, action):
             p = deepcopy(state.catP)
             if action == UP:
@@ -178,7 +172,6 @@ class QNet:
     def selectAction(self, state, training):
         if random.uniform(0, 1) < self.eps:
             return random.choice(self.ACTIONS)
-            # return int(random.choice(self.ACTIONS), 2)
         else:
             if training:
                 self.qc = self.qcs[state.row, state.column]
@@ -187,12 +180,11 @@ class QNet:
             return self.ACTIONS[np.argmax(self.qt[self.state.catP[0], self.state.catP[1]])]
         
     def lossFunction(self, params):
-        #state = self.state
-        #qc = self.qc
-        t_qc = transpile(self.qc, self.backend)
+        qc = self.qcMaker(params=params)
+        t_qc = transpile(qc, self.backend)
         job = assemble(t_qc, shots=self.NUM_SHOTS)
         rlt = self.backend.run(job).result()
-        counts = rlt.get_counts(self.qc) 
+        counts = rlt.get_counts(qc) 
         action = max(counts, key = counts.get)
         nextPosition = self.newPosition(self.state, action) # handle the 
         reward = self.getReward(nextPosition)
@@ -201,7 +193,7 @@ class QNet:
         predictedQvalue = self.calculateQvalue(action, nextPosition, reward, self.state)
         
         # update q-table
-        # self.updateQtable(predictedQvalue, action)
+        self.updateQtable(predictedQvalue, action)
 
         return targetQvalue - self.qt[self.state.catP[0],self.state.catP[1]][int(action,2)]
 
@@ -214,7 +206,7 @@ class QNet:
         return self.qt[state.catP[0], state.catP[1]][int(action,2)] + self.alpha * (targetQvalue - self.qt[state.catP[0],state.catP[1]][int(action,2)]) # update q-table
 
     def updateCircuit(self):
-        self.rets[self.state.catP[0],self.state.catP[1]] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.params)
+        self.rets[self.state.catP[0],self.state.catP[1]] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.rets[self.state.catP[0],self.state.catP[1]])
 
     def setAlpha(self, alpha):
         self.alpha = alpha
