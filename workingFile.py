@@ -297,7 +297,7 @@ class PetSchool:
             for _ in range(self.MAX_EPISODE_STEPS): # step: a time step for agent
                 action = self.cat.qNet.selectAction(state, self.training)
                 p, reward, end = self.cat.act(state, action)
-                self.cat.updateQtable(action, p, reward, state)
+                # self.cat.updateQtable(action, p, reward, state) # update the q-value speedup
                 total_reward += reward
                 step += 1
                 counter += 1
