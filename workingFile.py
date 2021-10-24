@@ -196,7 +196,7 @@ class QNet:
         reward = self.getReward(nextPosition)
         # update q-table(but not very sure, update only for this action or for all actions)
         targetQvalue = reward + self.gamma *  np.max(self.qt[nextPosition[0],nextPosition[1]])
-        predictedQvalue = self.calculateQvalue(action, nextPosition, reward)
+        predictedQvalue = self.calculateQvalue(action, nextPosition, reward, self.state)
         
         # update q-table
         self.updateQtable(predictedQvalue, action)
@@ -207,9 +207,9 @@ class QNet:
         if self.qt[(self.state.catP[0],self.state.catP[1])][int(action,2)] < predictedQvalue:
             self.qt[self.state.catP[0],self.state.catP[1]][int(action,2)] = predictedQvalue
 
-    def calculateQvalue(self, action, nextPosition, reward):
+    def calculateQvalue(self, action, nextPosition, reward, state):
         targetQvalue = reward + self.gamma *  np.max(self.qt[nextPosition[0],nextPosition[1]])
-        return self.qt[self.state.catP[0],self.state.catP[1]][int(action,2)] + self.alpha * (targetQvalue - self.qt[self.state.catP[0],self.state.catP[1]][int(action,2)]) # update q-table
+        return self.qt[state.catP[0], state.catP[1]][int(action,2)] + self.alpha * (targetQvalue - self.qt[state.catP[0],state.catP[1]][int(action,2)]) # update q-table
 
     def updateCircuit(self):
         self.rets[self.state.catP[0],self.state.catP[1]] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.params)
@@ -271,8 +271,8 @@ class Cat:
         reward, end = self.getReward(p)
         return p, reward, end
     
-    def updateQtable(self, action, p, reward):
-        pqv = self.qNet.calculateQvalue(action, p, reward)
+    def updateQtable(self, action, p, reward, state):
+        pqv = self.qNet.calculateQvalue(action, p, reward, state)
         self.qNet.updateQtable(pqv, action)
 
     def setTraining(self, training):
@@ -300,7 +300,7 @@ class PetSchool:
             for _ in range(self.MAX_EPISODE_STEPS): # step: a time step for agent
                 action = self.cat.qNet.selectAction(state, self.training)
                 p, reward, end = self.cat.act(state, action)
-                self.cat.updateQtable(action, p, reward)
+                self.cat.updateQtable(action, p, reward, state)
                 total_reward += reward
                 step += 1
                 counter += 1
