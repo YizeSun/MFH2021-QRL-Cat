@@ -8,7 +8,7 @@ from qiskit.aqua.components.optimizers import COBYLA
 
 #
 CAT = "c"
-DOG = "d"
+# DOG = "d"
 MOUSE = "m"
 EMPTY = "emp"
 
@@ -27,6 +27,7 @@ RIGHT = "11"
 ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
 random.seed(10)
+np.random.seed(10)
 
 class State:
     def __init__(self, catP):
@@ -87,11 +88,14 @@ class GridWorld:
     def setCatP(self, p):
         self.catP = p
     
-    def initCatState(self):
+    def initCatState(self, rd = False):
         # init cat position
-        catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
-        while self.getItem(catP) != EMPTY and self.getItem(catP) != CAT:
+        if not rd:
+            catP = [self.getNumRows() - 1, self.getNumColumns() - 1]
+        else:
             catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
+            while self.getItem(catP) != EMPTY and self.getItem(catP) != CAT:
+                catP = [random.randint(0, self.getNumRows()), random.randint(0, self.getNumColumns())]
         self.setCatP(catP)
         return State(catP)
     
@@ -129,7 +133,7 @@ class QNet:
         
         for i in range(self.gw.getNumRows()):
             for j in range(self.gw.getNumColumns()):
-                self.rets[i, j] = self.params 
+                self.rets[i, j] = (self.params, 0.0, 0) 
     
     def qcMaker(self, params):
         qr = QuantumRegister(2, name="q")
@@ -142,27 +146,27 @@ class QNet:
         return qc
 
     def newPosition(self, state, action):
-            p = deepcopy(state.catP)
-            if action == UP:
-                p[0] = max(0, p[0] - 1)
-            elif action == DOWN:
-                p[0] = min(self.gw.getNumRows() - 1, p[0]+1)
-            elif action == LEFT:
-                p[1] = max(0, p[1] - 1)
-            elif action == RIGHT:
-                p[1] = min(self.gw.getNumColumns() - 1, p[1] + 1)
-            else:
-                raise ValueError(f"Unkown action {action}")
-            return p
+        p = deepcopy(state.catP)
+        if action == UP:
+            p[0] = max(0, p[0] - 1)
+        elif action == DOWN:
+            p[0] = min(self.gw.getNumRows() - 1, p[0]+1)
+        elif action == LEFT:
+            p[1] = max(0, p[1] - 1)
+        elif action == RIGHT:
+            p[1] = min(self.gw.getNumColumns() - 1, p[1] + 1)
+        else:
+            raise ValueError(f"Unkown action {action}")
+        return p
         
     def getReward(self, p):
         grid = self.gw.getItem(p)
-        if grid == DOG:
-            reward = -1000
+        if grid == EMPTY:
+            reward = -1
+        # elif grid == DOG:
+        #     reward = -1000
         elif grid == MOUSE:
             reward = 100
-        elif grid == EMPTY:
-            reward = -1
         elif grid == CAT:
             reward = -1 # (maybe less than reward of empty)
         else:
@@ -174,7 +178,6 @@ class QNet:
             return random.choice(self.ACTIONS)
         else:
             if training:
-                self.qc = self.qcs[state.row, state.column]
                 self.state = state
                 self.updateCircuit()
             return self.ACTIONS[np.argmax(self.qt[self.state.catP[0], self.state.catP[1]])]
@@ -206,7 +209,7 @@ class QNet:
         return self.qt[state.catP[0], state.catP[1]][int(action,2)] + self.alpha * (targetQvalue - self.qt[state.catP[0],state.catP[1]][int(action,2)]) # update q-table
 
     def updateCircuit(self):
-        self.rets[self.state.catP[0],self.state.catP[1]] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.rets[self.state.catP[0],self.state.catP[1]])
+        self.rets[self.state.catP[0],self.state.catP[1]] = self.optimizer.optimize(num_vars=6, objective_function=self.lossFunction, initial_point=self.rets[self.state.catP[0],self.state.catP[1]][0])
 
     def setAlpha(self, alpha):
         self.alpha = alpha
@@ -286,7 +289,7 @@ class PetSchool:
         counter = 0
         for e in range(self.NUM_EPISODES): #  episode: a rund for agent
             print("episode: ", e)
-            state = self.cat.qNet.gw.initCatState()
+            state = self.cat.qNet.gw.initCatState( rd= True)# default: rd = False
             self.cat.qNet.setAlpha(self.alphas[e])
             total_reward  = 0
             step = 0
@@ -308,7 +311,7 @@ class PetSchool:
         # self.cat.setTraining(False)
         self.cat.qNet.gw.show()
         print("qTable: ", self.cat.qNet.qt)
-        print("params: ", self.cat.qNet.rets )
+        print("\nparams: ", self.cat.qNet.rets)
 
     def initqTable(self, actions, size):
         d = {}
@@ -336,10 +339,10 @@ class PetSchool:
 gridSize = [3, 3]
 catP = [gridSize[0]-1, gridSize[0]-1]
 mouseP = [0, 0]
-EPS = 50
-MAX_EPS_STEP = 50
+EPS = 30
+MAX_EPS_STEP = 200
 sizeOfParams = 6
-gamma = 0.9
+gamma = 0.98
 
 def initqTable(size, actions=[UP, DOWN, LEFT, RIGHT]):
     d = {}
