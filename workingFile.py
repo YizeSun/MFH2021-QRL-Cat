@@ -88,6 +88,9 @@ class GridWorld:
     def setCatP(self, p):
         self.catP = p
     
+    def setMouseP(self, p):
+        self.mouseP = p
+    
     def initCatState(self, rd = False):
         # init cat position
         if not rd:
