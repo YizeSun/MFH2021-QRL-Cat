@@ -26,6 +26,8 @@ RIGHT = "11"
 
 ACTIONS = [UP, DOWN, LEFT, RIGHT]
 
+random.seed(10)
+
 class State:
     def __init__(self, catP):
         self.row = catP[0]
@@ -199,7 +201,7 @@ class QNet:
         predictedQvalue = self.calculateQvalue(action, nextPosition, reward, self.state)
         
         # update q-table
-        self.updateQtable(predictedQvalue, action)
+        # self.updateQtable(predictedQvalue, action)
 
         return targetQvalue - self.qt[self.state.catP[0],self.state.catP[1]][int(action,2)]
 
