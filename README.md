@@ -9,4 +9,13 @@ Deep Q-learning is prevalent for reinforcement learning tasks. How about a deep 
 
 **Goal:**
 
-Training a cat (single agent) to catch a mouse in a grid environment(e.g. 2*2, 4*4)
+Training a cat (single agent) to catch a mouse in a grid environment(e.g. 3*3, 4*4)
+
+# Implementation
+There are two implementation under different assumptions.
+
+## CatHiddenMouse
+Under assumption, the mouse is hidden in some place and do not move, so the cat can not observe where the mouse is and the cat can only go straight. The task is to training the cat find the hidden mouse.
+
+## CatMovingMouse
+Under assumption, the mouse does not hid himself, but can stay or move at any time step. The cat can observe the position of the mouse at any time and the cat can go not only straight but also diagonal. 
